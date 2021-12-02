@@ -66,6 +66,12 @@ app.get("/u/:shortURL", (req, res) => {
     res.redirect(longURL);
   });
 
+app.post("/urls/:id", (req, res) => {
+    console.log('http://' + req.body.UpdatedlongURL);
+    // link to shortURL, change database
+    res.redirect(`/urls`);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });

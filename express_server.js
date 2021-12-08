@@ -48,16 +48,18 @@ res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.get("/urls", (req, res) => {
+    const loggedInUser = req.cookies["user_id"];
     const templateVars = {
-        username: req.cookies["username"],
+        user: users[loggedInUser],
         urls: urlDatabase
       };
-    res.render("urls_index", templateVars);
+    res.render("urls_index", templateVars); // user_id in cookie detected by email
 });
 
 app.get("/urls/new", (req, res) => {
+    const loggedInUser = req.cookies["user_id"];
     const templateVars = {
-        username: req.cookies["username"],
+        user: users[loggedInUser],
       };
     res.render("urls_new", templateVars);
   });
@@ -74,8 +76,9 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+    const loggedInUser = req.cookies["user_id"];
     const templateVars = { 
-        username: req.cookies["username"],
+        user: users[loggedInUser],
         shortURL: req.params.shortURL, 
         longURL: urlDatabase[req.params.shortURL] };
     res.render("urls_show", templateVars);
@@ -92,8 +95,9 @@ app.get("/u/:shortURL", (req, res) => {
   });
 
   app.get("/register", (req, res) => {
+    const loggedInUser = req.cookies["user_id"];
     const templateVars = {
-        username: req.cookies["username"],
+        user: users[loggedInUser],
       };
     res.render("urls_register", templateVars);
   });

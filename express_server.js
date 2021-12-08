@@ -22,6 +22,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+    "userRandomID": {
+      id: "userRandomID", 
+      email: "user@example.com", 
+      password: "purple-monkey-dinosaur"
+    },
+   "user2RandomID": {
+      id: "user2RandomID", 
+      email: "user2@example.com", 
+      password: "dishwasher-funk"
+    }
+  }
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -78,6 +91,13 @@ app.get("/u/:shortURL", (req, res) => {
     res.redirect(longURL);
   });
 
+  app.get("/register", (req, res) => {
+    const templateVars = {
+        username: req.cookies["username"],
+      };
+    res.render("urls_register", templateVars);
+  });
+
 app.post("/urls/:id", (req, res) => {
     urlDatabase[req.params.id] = 'http://' + req.body.newURL;
     res.redirect(`/urls`);
@@ -93,6 +113,28 @@ app.post("/logout", (req, res) => {
     res.redirect(`/urls`);
 });
 
+app.post("/register", (req, res) => {
+    const email = req.body.email;
+    const password = req.body.password;
+    const findUser = (email, userDatabase) => {
+        for(const user in userDatabase) {
+            if(email === userDatabase[user].email) {
+                return user;
+            }
+        }
+        return undefined;
+    }
+    if(findUser(email, users) !== undefined) {
+        return res.send('Email already registered, please login.')
+    } else {
+        const newUser = generateRandomString(6);
+        users[newUser] = { id: newUser, email: email, password: password };
+        res.cookie('user_id', newUser);
+        res.redirect(`/urls`);
+    }
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
+  
 });

@@ -7,6 +7,15 @@ function generateRandomString(length) {
     return result;
 }
 
+const findUser = (email, userDatabase) => {
+    for(const user in userDatabase) {
+        if(email === userDatabase[user].email) {
+            return userDatabase[user];
+        }
+    }
+    return undefined;
+}
+
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -102,14 +111,33 @@ app.get("/u/:shortURL", (req, res) => {
     res.render("urls_register", templateVars);
   });
 
+  app.get("/login", (req, res) => {
+    const loggedInUser = req.cookies["user_id"];
+    const templateVars = {
+        user: users[loggedInUser],
+      };
+    res.render("urls_login", templateVars);
+});
+
 app.post("/urls/:id", (req, res) => {
     urlDatabase[req.params.id] = 'http://' + req.body.newURL;
     res.redirect(`/urls`);
 });
 
 app.post("/login", (req, res) => {
-    res.cookie('username', req.body.username);
-    res.redirect(`/urls`);
+    const username = req.body.email;
+    const password = req.body.password;
+    const user = findUser(username, users);
+    if(user === undefined) {
+        res.status(403);
+        res.send('Please register first.');
+    } else if(user !== undefined && user.password === password) {
+        res.cookie('user_id', user.id);
+        res.redirect(`/urls`);
+    } else {
+        res.status(403);
+        res.send('wrong password');
+    }
 });
 
 app.post("/logout", (req, res) => {
@@ -120,16 +148,13 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
-    const findUser = (email, userDatabase) => {
-        for(const user in userDatabase) {
-            if(email === userDatabase[user].email) {
-                return user;
-            }
-        }
-        return undefined;
+    if(email === '' || password === '') {
+        res.status(400);
+        res.send('Can\'t be empty email or password.');
     }
     if(findUser(email, users) !== undefined) {
-        return res.send('Email already registered, please login.')
+        res.status(400);
+        res.send('Email registered already.');
     } else {
         const newUser = generateRandomString(6);
         users[newUser] = { id: newUser, email: email, password: password };

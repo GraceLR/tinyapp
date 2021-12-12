@@ -16,8 +16,10 @@
           <% } else { %>
             <form class="form-inline" action="/logout" method="POST"> 
               <div class="form-group mb-2">
-            <label class="mr-3" for="Logged in As">Logged in As: <%= user['email'] %></label>
-            <button type="Logout" class="btn btn-outline-dark"> Logout</button>
+                <label class="mr-3" for="Logged in As">Logged in As: <%= user['email'] %></label>
+                <button type="Logout" class="btn btn-outline-dark">Logout</button>
+              </div>
+            </form>
           <% } %>
         </div>
       </div>

@@ -14,7 +14,21 @@ const findUser = (email, userDatabase) => {
         }
     }
     return undefined;
-}
+};
+
+const urlsForUser = (id, loggedInUser, urlDatabase) => {
+    const urlFiltered = {};
+    if(id === loggedInUser) {
+        for(const url in urlDatabase) {
+            if(urlDatabase[url]['userID'] === id) {
+                urlFiltered[url] = urlDatabase[url];
+            }
+        }
+        return urlFiltered;
+    } else { 
+        return undefined;
+    }
+};
 
 const express = require("express");
 const app = express();
@@ -60,9 +74,13 @@ app.get("/urls", (req, res) => {
     const loggedInUser = req.cookies["user_id"];
     const templateVars = {
         user: users[loggedInUser],
-        urls: urlDatabase
+        urls: urlsForUser(loggedInUser, loggedInUser, urlDatabase)
       };
-    res.render("urls_index", templateVars); // user_id in cookie detected by email
+    if(loggedInUser !== undefined) {
+        res.render("urls_index", templateVars);
+    } else {
+        res.send('Please Login or Register first.\n');
+    }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -83,7 +101,15 @@ app.get("/urls/:shortURL", (req, res) => {
         user: users[loggedInUser],
         shortURL: req.params.shortURL, 
         longURL: urlDatabase[req.params.shortURL]['longURL'] };
-    res.render("urls_show", templateVars);
+        if(loggedInUser === undefined) {
+            res.send('Please Login first.\n');
+        } else if(urlDatabase[req.params.shortURL] === undefined) {
+            res.send('Corresponding longURL hasn\'t been created.\n');
+        } else if(urlDatabase[req.params.shortURL]['userID'] !== loggedInUser) {
+            res.send('shortURL used by another user\n');
+        } else {
+            res.render("urls_show", templateVars);
+        }
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -117,20 +143,39 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
     const shortURL = generateRandomString(6);
     urlDatabase[shortURL] = { longURL: 'http://' + req.body.longURL, userID: req.cookies["user_id"] };
-    console.log(urlDatabase)
     res.redirect(`/urls/${shortURL}`);
 });
 
-app.post("/urls/:id", (req, res) => {
-    const shortURL = req.params.id;
+app.post("/urls/:shortURL", (req, res) => {
+    const shortURL = req.params.shortURL;
     const longURL = req.body.newURL;
-    urlDatabase[shortURL]['longURL'] = 'http://' + longURL;
-    res.redirect(`/urls`);
+    const loggedInUser = req.cookies["user_id"];
+    if(loggedInUser === undefined) {
+        res.send('Please Login first.\n');
+    } else if(urlDatabase[req.params.shortURL] === undefined) {
+        console.log(urlDatabase)
+        console.log(req.params.shortURL)
+        res.send('Corresponding record doesn\'t exit. Nothing to edit.\n');
+    } else if(urlDatabase[req.params.shortURL]['userID'] !== loggedInUser) {
+        res.send('You are not the creator of this record. You are not allowed to edit this record.\n');
+    } else {
+        urlDatabase[shortURL]['longURL'] = 'http://' + longURL;
+        res.redirect(`/urls`);
+    }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => { 
-    delete urlDatabase[req.params.shortURL];
-    res.redirect(`/urls`);
+    const loggedInUser = req.cookies["user_id"];
+    if(loggedInUser === undefined) {
+        res.send('Please Login first.\n');
+    } else if(urlDatabase[req.params.shortURL] === undefined) {
+        res.send('Corresponding record doesn\'t exit. Nothing to delete.\n');
+    } else if(urlDatabase[req.params.shortURL]['userID'] !== loggedInUser) {
+        res.send('You are not the creator of this record. You are not allowed to delete this record.\n');
+    } else {
+        delete urlDatabase[req.params.shortURL];
+        res.redirect(`/urls`);
+    }
 });
 
 app.post("/login", (req, res) => {
@@ -139,13 +184,13 @@ app.post("/login", (req, res) => {
     const user = findUser(username, users);
     if(user === undefined) {
         res.status(403);
-        res.send('Please register first.');
+        res.send('Please register first.\n');
     } else if(user !== undefined && user.password === password) {
         res.cookie('user_id', user.id);
         res.redirect(`/urls`);
     } else {
         res.status(403);
-        res.send('wrong password');
+        res.send('wrong password\n');
     }
 });
 
@@ -159,11 +204,11 @@ app.post("/register", (req, res) => {
     const password = req.body.password;
     if(email === '' || password === '') {
         res.status(400);
-        res.send('Can\'t be empty email or password.');
+        res.send('Can\'t be empty email or password.\n');
     }
     if(findUser(email, users) !== undefined) {
         res.status(400);
-        res.send('Email registered already.');
+        res.send('Email registered already.\n');
     } else {
         const newUser = generateRandomString(6);
         users[newUser] = { id: newUser, email: email, password: password };

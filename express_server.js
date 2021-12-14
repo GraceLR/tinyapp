@@ -50,11 +50,7 @@ app.get("/urls", (req, res) => {
     user: users[loggedInUser],
     urls: urlsForUser(loggedInUser, loggedInUser, urlDatabase)
   };
-  if (loggedInUser !== undefined) {
-    res.render("urls_index", templateVars);
-  } else {
-    res.send('Please Login or Register first.\n');
-  }
+  res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
@@ -155,14 +151,12 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
   const user = findUser(username, users);
   if (user === undefined) {
-    res.status(403);
-    res.send('Please register first.\n');
+    res.status(403).send('Please register first.\n');
   } else if (user !== undefined && bcrypt.compareSync(password, user.password)) {
     req.session.user_id = user.id;
     res.redirect(`/urls`);
   } else {
-    res.status(403);
-    res.send('wrong password\n');
+    res.status(403).send('wrong password\n');
   }
 });
 
@@ -175,12 +169,10 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (email === '' || password === '') {
-    res.status(400);
-    res.send('Can\'t be empty email or password.\n');
+    res.status(400).send('Can\'t be empty email or password.\n');
   }
   if (findUser(email, users) !== undefined) {
-    res.status(400);
-    res.send('Email registered already.\n');
+    res.status(400).send('Email registered already.\n');
   } else {
     const hashedPassword = bcrypt.hashSync(password, 10);
     const newUser = generateRandomString(6);

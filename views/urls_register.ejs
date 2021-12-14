@@ -16,6 +16,9 @@
 
     <main style="margin: 1em;">
       <h3 style="margin-bottom: 20px;">Create Account</h3>
+      <% if(message !== undefined){ %>
+        <p><%= message %></p>
+        <% } %>
       <form class="form" action="/register" method="POST"> 
         <div class="form-group mb-2">
           <label for="email">Email Address:</label>

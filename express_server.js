@@ -1,3 +1,4 @@
+
 const { generateRandomString, findUser, urlsForUser } = require("./helpers");
 const express = require("express");
 const app = express();
@@ -31,15 +32,15 @@ const users = {
   },
 };
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("Hello!");
 });
 
-app.get("/urls.json", (req, res) => {
+app.get("/urls.json", (_req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
+app.get("/hello", (_req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
@@ -107,7 +108,8 @@ app.get("/login", (req, res) => {
   const loggedInUser = req.session.user_id;
   const templateVars = {
     user: users[loggedInUser],
-    message: undefined
+    emCheck: true,
+    pmCheck: true
   };
   res.render("urls_login", templateVars);
 });
@@ -156,27 +158,21 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
+  
   const loggedInUser = req.session.user_id;
-  const templateVars = {
+  const emMatch = findUser(req.body.email, users);
+  const pwMatch = emMatch === undefined ? false : bcrypt.compareSync(req.body.password, emMatch.password);
+
+  const templateVars = { 
     user: users[loggedInUser],
-    message: undefined
+    emCheck: emMatch,
+    pmCheck: pwMatch
   };
-  const username = req.body.email;
-  const password = req.body.password;
-  const user = findUser(username, users);
-  if (user === undefined) {
-    // res.status(403);
-    templateVars.message = "Please register first.\n";
-    res.render("urls_login", templateVars);
-  } else if (
-    user !== undefined &&
-    bcrypt.compareSync(password, user.password)
-  ) {
-    req.session.user_id = user.id;
+
+  if(emMatch !== undefined && pwMatch) {
+    req.session.user_id = emMatch.id;
     res.redirect(`/urls`);
   } else {
-    // res.status(403)
-    templateVars.message = "wrong password\n";
     res.render("urls_login", templateVars);
   }
 });

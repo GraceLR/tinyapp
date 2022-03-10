@@ -22,12 +22,6 @@
     <%- include('partials/_header') %>
     <main style="margin: 1em">
       <h3 style="margin-bottom: 20px">Login</h3>
-      <% if(emCheck === undefined){ %>
-        <p>Please <a href="/register">Register</a> first.</p>
-      <% } else if(!pmCheck) { %>
-        <p>Wrong password, please try again.</p>
-        <% } %>
-
       <form class="form" action="/login" method="POST">
         <div class="form-group mb-2">
           <label for="email">Email Address:</label>

@@ -158,22 +158,20 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.post("/login", (req, res) => {
 
-  const loggedInUser = req.session.user_id;
   const emMatch = findUser(req.body.email, users);
-  const pwMatch = emMatch === undefined ? false : bcrypt.compareSync(req.body.password, emMatch.password);
+  const pwMatch = emMatch ? bcrypt.compareSync(req.body.password, emMatch.password) : false;
 
-  const templateVars = { 
-    user: users[loggedInUser],
-    emCheck: emMatch,
-    pmCheck: pwMatch
-  };
+  if(pwMatch) {
 
-  if(emMatch !== undefined && pwMatch) {
     req.session.user_id = emMatch.id;
     res.redirect(`/urls`);
+
   } else {
-    res.render("urls_login", templateVars);
+
+    res.status(403).send('Wrong Email or Password, please try again.');
+
   }
+  
 });
 
 app.post("/logout", (req, res) => {

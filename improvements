@@ -1,0 +1,11 @@
+
+    // add to check for validating email
+      // password: req.body.password // can add password check for validating the pw
+      // lights up, re-type, button 'show or not show/
+      // can i require function in ejs file?
+      // databse not initiated
+      // what can't be included in a strong password, does that impact coding?
+      // what can't be included in a valid email, does that impact coding?
+      // add language selection, french
+      // only try to login three times
+      // encrypt using https?

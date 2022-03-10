@@ -1,5 +1,5 @@
 
-const { generateRandomString, findUser, urlsForUser } = require("./helpers");
+const { generateRandomString, findUser, urlsForUser, strongPasswordCheck } = require("./helpers");
 const express = require("express");
 const app = express();
 const PORT = 8080;
@@ -98,8 +98,7 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/register", (req, res) => {
   const loggedInUser = req.session.user_id;
   const templateVars = {
-    user: users[loggedInUser],
-    message: undefined
+    user: users[loggedInUser]
   };
   res.render("urls_register", templateVars);
 });
@@ -158,7 +157,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  
+
   const loggedInUser = req.session.user_id;
   const emMatch = findUser(req.body.email, users);
   const pwMatch = emMatch === undefined ? false : bcrypt.compareSync(req.body.password, emMatch.password);
@@ -183,29 +182,28 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-    const loggedInUser = req.session.user_id;
-    const templateVars = {
-      user: users[loggedInUser],
-      message: undefined
-    };
-  const email = req.body.email;
-  const password = req.body.password;
-  if (email === "" || password === "") {
-    // res.status(400);
-    templateVars.message = "Can't be empty email or password.\n";
-    res.render('urls_register', templateVars);
-  }
-  if (findUser(email, users) !== undefined) {
-    // res.status(400);
-    templateVars.message = "Email registered already.\n";
-    res.render('urls_register', templateVars);
-  } else {
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    const newUser = generateRandomString(6);
-    users[newUser] = { id: newUser, email: email, password: hashedPassword };
-    req.session.user_id = newUser;
-    res.redirect(`/urls`);
-  }
+
+    const email = req.body.email;
+    const password = req.body.password;
+
+    if (!email || !password) {
+
+      res.status(400).send("Email or Password can not be empty.\n");
+
+    } else if (findUser(email, users)) {
+
+      res.status(400).send("Email registered already.\n");
+
+    } else {
+
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      const newUser = generateRandomString(6);
+      users[newUser] = { id: newUser, email: email, password: hashedPassword };
+      req.session.user_id = newUser;
+      res.redirect(`/urls`);
+
+    }
+
 });
 
 app.listen(PORT, () => {

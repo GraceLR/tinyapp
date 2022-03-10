@@ -54,15 +54,22 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+
   const loggedInUser = req.session.user_id;
   const templateVars = {
     user: users[loggedInUser],
   };
-  if (loggedInUser !== undefined) {
+
+  if (loggedInUser) {
+
     res.render("urls_new", templateVars);
+
   } else {
+
     res.redirect("/login");
+
   }
+
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -84,76 +91,111 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const loggedInUser = req.session.user_id;
-  const templateVars = {
-    user: users[loggedInUser],
-  };
+
   const shortURL = req.params.shortURL;
+
   if (urlDatabase[shortURL] === undefined) {
-    return res.render("u_index", templateVars);
+
+    res.send("ShortURL does not exist.")
+
+  } else {
+
+    res.redirect(urlDatabase[shortURL]["longURL"]);
+
   }
-  res.redirect(urlDatabase[shortURL]["longURL"]);
+
 });
 
 app.get("/register", (req, res) => {
+
   const loggedInUser = req.session.user_id;
   const templateVars = {
     user: users[loggedInUser]
   };
+
   res.render("urls_register", templateVars);
+
 });
 
 app.get("/login", (req, res) => {
+
   const loggedInUser = req.session.user_id;
   const templateVars = {
     user: users[loggedInUser],
     emCheck: true,
     pmCheck: true
   };
+
   res.render("urls_login", templateVars);
+
 });
 
 app.post("/urls", (req, res) => {
+
   const shortURL = generateRandomString(6);
   urlDatabase[shortURL] = {
     longURL: "http://" + req.body.longURL,
     userID: req.session.user_id,
   };
+
   res.redirect(`/urls/${shortURL}`);
+
 });
 
 app.post("/urls/:shortURL", (req, res) => {
+
   const shortURL = req.params.shortURL;
   const longURL = req.body.newURL;
   const loggedInUser = req.session.user_id;
+
   if (loggedInUser === undefined) {
+
     res.send("Please Login first.\n");
+
   } else if (urlDatabase[req.params.shortURL] === undefined) {
+
     res.send("Corresponding record doesn't exit. Nothing to edit.\n");
+
   } else if (urlDatabase[req.params.shortURL]["userID"] !== loggedInUser) {
+
     res.send(
       "You are not the creator of this record. You are not allowed to edit this record.\n"
     );
+
   } else {
+
     urlDatabase[shortURL]["longURL"] = "http://" + longURL;
     res.redirect(`/urls`);
+
   }
+
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
+
   const loggedInUser = req.session.user_id;
+
   if (loggedInUser === undefined) {
+
     res.send("Please Login first.\n");
+
   } else if (urlDatabase[req.params.shortURL] === undefined) {
+
     res.send("Corresponding record doesn't exit. Nothing to delete.\n");
+
   } else if (urlDatabase[req.params.shortURL]["userID"] !== loggedInUser) {
+
     res.send(
       "You are not the creator of this record. You are not allowed to delete this record.\n"
     );
+
   } else {
+
     delete urlDatabase[req.params.shortURL];
     res.redirect(`/urls`);
+
   }
+
 });
 
 app.post("/login", (req, res) => {
@@ -171,12 +213,14 @@ app.post("/login", (req, res) => {
     res.status(403).send('Wrong Email or Password, please try again.');
 
   }
-  
+
 });
 
 app.post("/logout", (req, res) => {
+
   req.session = null;
   res.redirect(`/urls`);
+
 });
 
 app.post("/register", (req, res) => {

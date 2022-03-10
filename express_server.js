@@ -15,11 +15,14 @@ app.use(cookieSession({ name: "session", secret: "purple-dinosaur" }));
 app.set("view engine", "ejs");
 
 const urlDatabase = {
+
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
+
 };
 
 const users = {
+
   aJ48lW: {
     id: "aJ48lW",
     email: "user@example.com",
@@ -30,6 +33,7 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk",
   },
+
 };
 
 app.get("/", (_req, res) => {
@@ -45,12 +49,15 @@ app.get("/hello", (_req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+
   const loggedInUser = req.session.user_id;
   const templateVars = {
     user: users[loggedInUser],
     urls: urlsForUser(loggedInUser, loggedInUser, urlDatabase),
   };
+
   res.render("urls_index", templateVars);
+  
 });
 
 app.get("/urls/new", (req, res) => {
@@ -73,20 +80,30 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+
   const loggedInUser = req.session.user_id;
   const templateVars = {
     user: users[loggedInUser],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]["longURL"],
   };
+
   if (loggedInUser === undefined) {
+
     res.send("Please Login first.\n");
+
   } else if (urlDatabase[req.params.shortURL] === undefined) {
-    res.send("Corresponding longURL hasn't been created.\n");
+
+    res.send("ShortUrl hasn't been created.\n");
+
   } else if (urlDatabase[req.params.shortURL]["userID"] !== loggedInUser) {
-    res.send("shortURL used by another user\n");
+
+    res.send("ShortURL belongs to another user.\n");
+
   } else {
+
     res.render("urls_show", templateVars);
+
   }
 });
 
@@ -201,16 +218,20 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/login", (req, res) => {
 
   const emMatch = findUser(req.body.email, users);
-  const pwMatch = emMatch ? bcrypt.compareSync(req.body.password, emMatch.password) : false;
+  const pwMatch = emMatch !== undefined ? bcrypt.compareSync(req.body.password, emMatch.password) : false;
 
   if(pwMatch) {
 
     req.session.user_id = emMatch.id;
     res.redirect(`/urls`);
 
+  } else if (!emMatch){
+
+    res.status(403).send('Please register first.');
+
   } else {
 
-    res.status(403).send('Wrong Email or Password, please try again.');
+    res.status(403).send('Wrong Password, please try again.');
 
   }
 
@@ -232,7 +253,7 @@ app.post("/register", (req, res) => {
 
       res.status(400).send("Email or Password can not be empty.\n");
 
-    } else if (findUser(email, users)) {
+    } else if (findUser(email, users) !== undefined) {
 
       res.status(400).send("Email registered already.\n");
 

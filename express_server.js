@@ -1,5 +1,5 @@
 
-const { generateRandomString, findUser, urlsForUser, strongPasswordCheck } = require("./helpers");
+const { generateRandomString, findUser, urlsForUser } = require("./helpers");
 const express = require("express");
 const app = express();
 const PORT = 8080;
@@ -57,7 +57,7 @@ app.get("/urls", (req, res) => {
   };
 
   res.render("urls_index", templateVars);
-  
+
 });
 
 app.get("/urls/new", (req, res) => {
@@ -113,7 +113,7 @@ app.get("/u/:shortURL", (req, res) => {
 
   if (urlDatabase[shortURL] === undefined) {
 
-    res.send("ShortURL does not exist.")
+    res.send("ShortURL does not exist.");
 
   } else {
 
@@ -220,12 +220,12 @@ app.post("/login", (req, res) => {
   const emMatch = findUser(req.body.email, users);
   const pwMatch = emMatch !== undefined ? bcrypt.compareSync(req.body.password, emMatch.password) : false;
 
-  if(pwMatch) {
+  if (pwMatch) {
 
     req.session.user_id = emMatch.id;
     res.redirect(`/urls`);
 
-  } else if (!emMatch){
+  } else if (!emMatch) {
 
     res.status(403).send('Please register first.');
 
@@ -246,26 +246,26 @@ app.post("/logout", (req, res) => {
 
 app.post("/register", (req, res) => {
 
-    const email = req.body.email;
-    const password = req.body.password;
+  const email = req.body.email;
+  const password = req.body.password;
 
-    if (!email || !password) {
+  if (!email || !password) {
 
-      res.status(400).send("Email or Password can not be empty.\n");
+    res.status(400).send("Email or Password can not be empty.\n");
 
-    } else if (findUser(email, users) !== undefined) {
+  } else if (findUser(email, users) !== undefined) {
 
-      res.status(400).send("Email registered already.\n");
+    res.status(400).send("Email registered already.\n");
 
-    } else {
+  } else {
 
-      const hashedPassword = bcrypt.hashSync(password, 10);
-      const newUser = generateRandomString(6);
-      users[newUser] = { id: newUser, email: email, password: hashedPassword };
-      req.session.user_id = newUser;
-      res.redirect(`/urls`);
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const newUser = generateRandomString(6);
+    users[newUser] = { id: newUser, email: email, password: hashedPassword };
+    req.session.user_id = newUser;
+    res.redirect(`/urls`);
 
-    }
+  }
 
 });
 

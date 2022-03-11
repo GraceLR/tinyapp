@@ -16,8 +16,10 @@ app.set("view engine", "ejs");
 
 const urlDatabase = {
 
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", visitedCt: 0 },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW", visitedCt: 0 },
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", 
+  visitedCt: 0, uniqueVisitors: {}, uniqueVisitorsCt: 0 },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW", 
+  visitedCt: 0,  uniqueVisitors: {}, uniqueVisitorsCt: 0 },
 
 };
 
@@ -82,12 +84,6 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
 
   const loggedInUser = req.session.user_id;
-  const templateVars = {
-    user: users[loggedInUser],
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]["longURL"],
-    timesVisited: urlDatabase[req.params.shortURL]['visitedCt']
-  };
 
   if (loggedInUser === undefined) {
 
@@ -103,6 +99,14 @@ app.get("/urls/:shortURL", (req, res) => {
 
   } else {
 
+    const templateVars = {
+      user: users[loggedInUser],
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL]["longURL"],
+      timesVisited: urlDatabase[req.params.shortURL]['visitedCt'],
+      uniqueVisitorsCt: urlDatabase[req.params.shortURL]['uniqueVisitorsCt']
+    };
+
     res.render("urls_show", templateVars);
 
   }
@@ -110,16 +114,24 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
 
-  const shortURL = req.params.shortURL;
+  const url = urlDatabase[req.params.shortURL];
 
-  if (urlDatabase[shortURL] === undefined) {
+  if (url === undefined) {
 
     res.send("ShortURL does not exist.");
 
   } else {
 
-    urlDatabase[shortURL]['visitedCt'] ++;
-    res.redirect(urlDatabase[shortURL]["longURL"]);
+    url['visitedCt'] ++;
+
+    if(url['uniqueVisitors'][req.session.user_id] === undefined) {
+
+      url['uniqueVisitors'][req.session.user_id] = true;
+      url['uniqueVisitorsCt'] ++;
+
+    }
+
+    res.redirect(url["longURL"]);
 
   }
 
@@ -155,7 +167,9 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = {
     longURL: "http://" + req.body.longURL,
     userID: req.session.user_id,
-    visitedCt: 0
+    visitedCt: 0,
+    uniqueVisitors: {},
+    uniqueVisitorsCt: 0
   };
 
   res.redirect(`/urls/${shortURL}`);

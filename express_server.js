@@ -16,8 +16,8 @@ app.set("view engine", "ejs");
 
 const urlDatabase = {
 
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", visitedCt: 0 },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW", visitedCt: 0 },
 
 };
 
@@ -86,6 +86,7 @@ app.get("/urls/:shortURL", (req, res) => {
     user: users[loggedInUser],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]["longURL"],
+    timesVisited: urlDatabase[req.params.shortURL]['visitedCt']
   };
 
   if (loggedInUser === undefined) {
@@ -117,6 +118,7 @@ app.get("/u/:shortURL", (req, res) => {
 
   } else {
 
+    urlDatabase[shortURL]['visitedCt'] ++;
     res.redirect(urlDatabase[shortURL]["longURL"]);
 
   }
@@ -153,6 +155,7 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = {
     longURL: "http://" + req.body.longURL,
     userID: req.session.user_id,
+    visitedCt: 0
   };
 
   res.redirect(`/urls/${shortURL}`);
